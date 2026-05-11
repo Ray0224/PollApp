@@ -35,7 +35,19 @@ function PollList({ polls, onSelect, onHome }) {
 }
 
 function HomePage() {
-
+  return (
+    <div className="outercontainer">
+      <div className="background-title">
+    <h1 className="poll-title">第三屆全國醫技校友盃 投票網</h1>
+</div>
+  <div className="background-body">
+    <p>比賽時間:2026/5/16-2026/5/17</p>
+    <p>比賽地點:NVA</p>
+    <p>希望大家2天比賽玩得愉快</p>
+  </div>
+</div>
+    
+  )
 
 }
 function LoginPage() {
@@ -167,6 +179,7 @@ function PollPage() {
       ...o,
       voteCount: countMap[o.id] || 0
     }))
+    merged.sort((a, b) => b.voteCount - a.voteCount)
 
     setOptions(merged)
   }
@@ -280,7 +293,7 @@ function PollPage() {
     if (loadingId) return
 
     setLoadingId(optionId)
-  
+
     try {
       // 1. 查有沒有投過
       const { data } = await supabase
@@ -289,7 +302,7 @@ function PollPage() {
         .eq("option_id", optionId)
         .eq("user_id", user.id)
         .maybeSingle()
-  
+
       // ======================
       // 2. 已投過 → 取消投票
       // ======================
@@ -299,11 +312,11 @@ function PollPage() {
           .delete()
           .eq("option_id", optionId)
           .eq("user_id", user.id)
-  
+
         await fetchOptions()
         return
       }
-  
+
       // ======================
       // 3. 沒投過 → 新增投票
       // ======================
@@ -315,12 +328,12 @@ function PollPage() {
             user_id: user.id
           }
         ])
-  
+
       await fetchOptions()
-  
+
     } catch (err) {
       console.log(err)
-  
+
     } finally {
       setLoadingId(null)
     }
@@ -337,191 +350,191 @@ function PollPage() {
         <h1 className="poll-title">{poll?.title}</h1>
       </div>
       <div className="background-body">
-      <button className="add-option-btn" onClick={() => setShowForm(true)}>+ 推薦好友 </button>
+        <button className="add-option-btn" onClick={() => setShowForm(true)}>+ 推薦好友 </button>
 
-      {showForm && (
-        <div className="modal-overlay">
-          <div className="modal">
+        {showForm && (
+          <div className="modal-overlay">
+            <div className="modal">
 
-            <h2>候選人資料</h2>
+              <h2>候選人資料</h2>
 
-            <input
-              placeholder="姓名"
-              value={title}
-              maxLength={10}
-              onChange={(e) => setTitle(e.target.value)}
-            />
-            <textarea
-              className="description-input"
-              placeholder="100字內介紹你的候選人"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-            <p style={{ fontSize: "12px" }}>選一張最棒的照片(確定後不可修改)</p>
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => {
-                const file = e.target.files[0]
-                setFile(file)
-
-                if (file) {
-                  setPreview(URL.createObjectURL(file))
-                } else {
-                  setPreview(null)
-                }
-              }}
-            />
-
-            {preview && (
-              <div style={{ marginTop: 10 }}>
-                <img src={preview} width="150" />
-              </div>
-            )}
-
-            <div className="modal-actions">
-              <button className="save-btn" onClick={addOption}>
-                確定
-              </button>
-
-              <button className="cancel-btn" onClick={() => setShowForm(false)}>
-                取消
-              </button>
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {options.map(o => (
-        <div key={o.id}
-          className="card"
-        >
-          {/* 圖片 */}
-          {o.image_url && (
-            <img src={o.image_url} className="card-img" onClick={() => setSelectedOption(o)} />
-          )}
-
-          {/* 內容 */}
-          <div className="card-body">
-            <h3>
-              {o.title} ❤️ {o.voteCount} 票
-            </h3>
-
-            <button
-              className="vote-btn"
-              onClick={() => vote(o.id)}
-              disabled={loadingId === o.id}
-            >
-              {loadingId === o.id ? "投票中..." : "👍"}
-            </button>
-            {(o.user_id === user.id || user?.authority === 1) && (
-              <button
-                className="edit-btn"
-                onClick={() => {
-                  setEditOption(o)
-                  setEditTitle(o.title)
-                  setEditDescription(o.description)
-                }}
-              >
-                ✏️ 修改
-              </button>
-            )}
-            {(o.user_id === user.id || user?.authority === 1) && (
-              <button className="delete-btn" onClick={() => deleteOption(o)}>
-                🗑 刪除
-              </button>
-            )}
-          </div>
-        </div>
-      ))}
-      {editOption && (
-        <div className="modal-overlay">
-          <div className="modal">
-
-            <h2>修改</h2>
-
-            <input
-              value={editTitle}
-              maxLength={10}
-              onChange={(e) => setEditTitle(e.target.value)}
-            />
-
-            <textarea
-              className="description-input"
-              placeholder="100字內介紹你的候選人"
-              value={editDescription}
-              onChange={(e) => setEditDescription(e.target.value)}
-            />
-
-            <div className="modal-actions">
-
-              <button
-                className="save-btn"
-                onClick={async () => {
-                  await supabase
-                    .from("options")
-                    .update({
-                      title: editTitle,
-                      description: editDescription
-                    })
-                    .eq("id", editOption.id)
-
-                  setEditOption(null)
-                  fetchOptions()
-                }}
-              >
-                儲存
-              </button>
-
-
-              <button className="cancel-btn" onClick={() => setEditOption(null)}>
-                取消
-              </button>
-
-
-            </div>
-
-          </div>
-        </div>
-      )}
-      {selectedOption && (
-        <div
-          className="modal-overlay"
-          onClick={() => setSelectedOption(null)}
-        >
-          <div
-            className="detail-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-
-            {/* 大圖片 */}
-            {selectedOption.image_url && (
-              <img
-                src={selectedOption.image_url}
-                className="detail-img"
+              <input
+                placeholder="姓名"
+                value={title}
+                maxLength={10}
+                onChange={(e) => setTitle(e.target.value)}
               />
+              <textarea
+                className="description-input"
+                placeholder="100字內介紹你的候選人"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+              />
+              <p style={{ fontSize: "12px" }}>選一張最棒的照片(確定後不可修改)</p>
+
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files[0]
+                  setFile(file)
+
+                  if (file) {
+                    setPreview(URL.createObjectURL(file))
+                  } else {
+                    setPreview(null)
+                  }
+                }}
+              />
+
+              {preview && (
+                <div style={{ marginTop: 10 }}>
+                  <img src={preview} width="150" />
+                </div>
+              )}
+
+              <div className="modal-actions">
+                <button className="save-btn" onClick={addOption}>
+                  確定
+                </button>
+
+                <button className="cancel-btn" onClick={() => setShowForm(false)}>
+                  取消
+                </button>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {options.map(o => (
+          <div key={o.id}
+            className="card"
+          >
+            {/* 圖片 */}
+            {o.image_url && (
+              <img src={o.image_url} className="card-img" onClick={() => setSelectedOption(o)} />
             )}
 
-            {/* 標題 */}
-            <h2>{selectedOption.title}</h2>
+            {/* 內容 */}
+            <div className="card-body">
+              <h3>
+                {o.title} ❤️ {o.voteCount} 票
+              </h3>
 
-            {/* 介紹 */}
-            <div className="detail-description">
-              {selectedOption.description?.slice(0, MAX_DESCRIPTION)}
-
-              {selectedOption.description?.length > MAX_DESCRIPTION && "..."}
+              <button
+                className="vote-btn"
+                onClick={() => vote(o.id)}
+                disabled={loadingId === o.id}
+              >
+                {loadingId === o.id ? "投票中..." : "👍"}
+              </button>
+              {(o.user_id === user.id || user?.authority === 1) && (
+                <button
+                  className="edit-btn"
+                  onClick={() => {
+                    setEditOption(o)
+                    setEditTitle(o.title)
+                    setEditDescription(o.description)
+                  }}
+                >
+                  ✏️ 修改
+                </button>
+              )}
+              {(o.user_id === user.id || user?.authority === 1) && (
+                <button className="delete-btn" onClick={() => deleteOption(o)}>
+                  🗑 刪除
+                </button>
+              )}
             </div>
- 
- 
-
           </div>
-        </div>
-      )}
+        ))}
+        {editOption && (
+          <div className="modal-overlay">
+            <div className="modal">
+
+              <h2>修改</h2>
+
+              <input
+                value={editTitle}
+                maxLength={10}
+                onChange={(e) => setEditTitle(e.target.value)}
+              />
+
+              <textarea
+                className="description-input"
+                placeholder="100字內介紹你的候選人"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+              />
+
+              <div className="modal-actions">
+
+                <button
+                  className="save-btn"
+                  onClick={async () => {
+                    await supabase
+                      .from("options")
+                      .update({
+                        title: editTitle,
+                        description: editDescription
+                      })
+                      .eq("id", editOption.id)
+
+                    setEditOption(null)
+                    fetchOptions()
+                  }}
+                >
+                  儲存
+                </button>
+
+
+                <button className="cancel-btn" onClick={() => setEditOption(null)}>
+                  取消
+                </button>
+
+
+              </div>
+
+            </div>
+          </div>
+        )}
+        {selectedOption && (
+          <div
+            className="modal-overlay"
+            onClick={() => setSelectedOption(null)}
+          >
+            <div
+              className="detail-modal"
+              onClick={(e) => e.stopPropagation()}
+            >
+
+              {/* 大圖片 */}
+              {selectedOption.image_url && (
+                <img
+                  src={selectedOption.image_url}
+                  className="detail-img"
+                />
+              )}
+
+              {/* 標題 */}
+              <h2>{selectedOption.title}</h2>
+
+              {/* 介紹 */}
+              <div className="detail-description">
+                {selectedOption.description?.slice(0, MAX_DESCRIPTION)}
+
+                {selectedOption.description?.length > MAX_DESCRIPTION && "..."}
+              </div>
+
+
+
+            </div>
+          </div>
+        )}
       </div>
 
-      
+
     </div>
   )
 
