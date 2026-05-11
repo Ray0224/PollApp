@@ -60,7 +60,8 @@ function PollPage() {
   const [editTitle, setEditTitle] = useState("")
   const [editDescription, setEditDescription] = useState("")
   const [selectedOption, setSelectedOption] = useState(null)
-  const MAX_DESCRIPTION = 200
+
+  const MAX_DESCRIPTION = 100
 
   const [user, setUser] = useState(null)
   // =========================
@@ -234,24 +235,7 @@ function PollPage() {
     fetchOptions()
   }
 
-  const vote = async (optionId) => {
-    setLoadingId(optionId)
 
-    const { data: existing } = await supabase
-      .from("votes")
-      .select("*")
-      .eq("option_id", optionId)
-      .maybeSingle()
-
-    if (existing) {
-      await supabase.from("votes").delete().eq("id", existing.id)
-    } else {
-      await supabase.from("votes").insert([{ option_id: optionId }])
-    }
-
-    await fetchOptions()
-    setLoadingId(null)
-  }
   const deleteOption = async (option) => {
 
     // =========================
@@ -291,6 +275,55 @@ function PollPage() {
       .eq("id", option.id)
 
     fetchOptions()
+  }
+  const vote = async (optionId) => {
+    if (loadingId) return
+
+    setLoadingId(optionId)
+  
+    try {
+      // 1. 查有沒有投過
+      const { data } = await supabase
+        .from("votes")
+        .select("*")
+        .eq("option_id", optionId)
+        .eq("user_id", user.id)
+        .maybeSingle()
+  
+      // ======================
+      // 2. 已投過 → 取消投票
+      // ======================
+      if (data) {
+        await supabase
+          .from("votes")
+          .delete()
+          .eq("option_id", optionId)
+          .eq("user_id", user.id)
+  
+        await fetchOptions()
+        return
+      }
+  
+      // ======================
+      // 3. 沒投過 → 新增投票
+      // ======================
+      await supabase
+        .from("votes")
+        .insert([
+          {
+            option_id: optionId,
+            user_id: user.id
+          }
+        ])
+  
+      await fetchOptions()
+  
+    } catch (err) {
+      console.log(err)
+  
+    } finally {
+      setLoadingId(null)
+    }
   }
 
   // =========================
@@ -480,14 +513,8 @@ function PollPage() {
 
               {selectedOption.description?.length > MAX_DESCRIPTION && "..."}
             </div>
-
-            {/* 投票 */}
-            <button
-              className="vote-btn"
-              onClick={() => vote(selectedOption.id)}
-            >
-              👍
-            </button>
+ 
+ 
 
           </div>
         </div>
