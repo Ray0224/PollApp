@@ -152,7 +152,7 @@
 }
 .layout {
   display: flex;
- 
+  background-color: white;
 }
 
 /* 左側選單 */
@@ -164,6 +164,7 @@
   gap: 10px;
   border-right: 1px solid #eee;
   height: 100vh;
+  background-color: white;
 }
 
 /* 按鈕基本樣式 */
