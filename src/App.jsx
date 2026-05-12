@@ -255,7 +255,7 @@ function PollPage() {
     // 確認
     // =========================
     const ok = window.confirm("確定要刪除這個 option 嗎？")
-
+      
     if (!ok) return
 
     // =========================
@@ -269,15 +269,15 @@ function PollPage() {
     // =========================
     // 刪圖片
     // =========================
-    if (option.image_url) {
+    // if (option.image_url) {
 
-      // 從 URL 取出檔名
-      const fileName = option.image_url.split("/").pop()
+    //   // 從 URL 取出檔名
+    //   const fileName = option.image_url.split("/").pop()
 
-      await supabase.storage
-        .from("option-images")
-        .remove([fileName])
-    }
+    //   await supabase.storage
+    //     .from("option-images")
+    //     .remove([fileName])
+    // }
 
     // =========================
     // 刪 option
